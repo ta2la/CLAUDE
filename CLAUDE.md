@@ -1,3 +1,7 @@
+# SUPERCLAUDE — cvz/CLAUDE/CLAUDE.md
+
+Shared conventions for all cvz projects. Referenced as "SUPERCLAUDE" or "../../CLAUDE/CLAUDE.md" from module CLAUDE.md files.
+
 ## Command system (CLI)
 
 - Commands available via stdin, output to stdout.
@@ -34,7 +38,9 @@ When asked to analyze code:
 
 ## STDIO_BRIDGE — Claude's interface to running apps
 
-STDIO_BRIDGE is a lightweight console app that connects Claude's stdin/stdout to a running application (e.g. PROMPT_ASSEMBLER) via WebSocket.
+STDIO_BRIDGE is Claude's tool — use it to test, query, and interact with running apps. Don't ask the user to test via bridge; connect and verify yourself.
+
+STDIO_BRIDGE (`APPS/STDIO_BRIDGE/`) is a console app that connects Claude to a running application (e.g. PROMPT_ASSEMBLER) via WebSocket. Claude executes the same commands as the user does in the UI — both go through the same CMD_SYS.
 
 **Architecture:**
 ```
@@ -64,26 +70,44 @@ Claude stdout ← WsClientBridge.onMessage_ ← WS broadcast ← WsServerLiteGua
 
 The bridge is Claude's primary way to interact with a running application. Both the user and Claude execute the same commands — the user via UI buttons, Claude via the bridge. The bridge stdout contains the result of every executed command (both Claude's and user's).
 
-1. Start bridge in background:
-   ```
-   rm -f /tmp/bridge_in; mkfifo /tmp/bridge_in
-   tail -f /tmp/bridge_in | APPS/STDIO_BRIDGE/debug/STDIO_BRIDGE 2>&1
-   ```
-   Save the background task ID.
+**Windows (PowerShell sync pattern):**
+Write a .ps1 script to /tmp/bridge_X.ps1, then run via `powershell -NoProfile -File /tmp/bridge_X.ps1`:
+```powershell
+$env:PATH = "D:\Qt\DQt5.15.2\x64-windows-msvc2017\bin;" + $env:PATH
+$pinfo = New-Object System.Diagnostics.ProcessStartInfo
+$pinfo.FileName = "D:\KADLUB\cvz\APPS\STDIO_BRIDGE\release\STDIO_BRIDGE.exe"
+$pinfo.RedirectStandardInput = $true
+$pinfo.RedirectStandardOutput = $true
+$pinfo.RedirectStandardError = $true
+$pinfo.UseShellExecute = $false
+$proc = [System.Diagnostics.Process]::Start($pinfo)
+Start-Sleep -Milliseconds 500
 
-2. Connect: `echo "./ws_connect" >> /tmp/bridge_in`
+$proc.StandardInput.WriteLine("./ws_connect")
+$line = $proc.StandardOutput.ReadLine()   # wait for response
 
-3. Read output and verify `--STATUS connected` before proceeding.
+$proc.StandardInput.WriteLine("command here")
+$line = $proc.StandardOutput.ReadLine()   # wait for response
 
-4. Send command: `echo "command args" >> /tmp/bridge_in`
+$proc.Kill()
+```
 
-5. Read output and verify the command result before sending the next command.
+**Linux (fifo pattern):**
+```bash
+rm -f /tmp/bridge_in; mkfifo /tmp/bridge_in
+tail -f /tmp/bridge_in | APPS/STDIO_BRIDGE/debug/STDIO_BRIDGE 2>&1
+# Connect: echo "./ws_connect" >> /tmp/bridge_in
+# Send:    echo "command args" >> /tmp/bridge_in
+```
 
 **Rules:**
-- ALWAYS read and verify stdout after every command. The output tells you exactly what happened — success, error, data. Never guess, never skip.
+- ALWAYS wait for response after each command before sending the next one. Read stdout and verify the result. Never batch multiple commands without waiting.
 - Connection can be opened and closed as needed — no need to stay connected permanently.
 - The app broadcasts all command results to all WS clients. This means Claude sees results of user's UI actions too — use this to stay aware of app state.
 - Diagnostic/query commands replace the UI for Claude — use them to inspect state instead of asking the user what they see.
+
+**`pa_file` convention:**
+When the user writes `pa_file`, connect via bridge and call `file_preview_path` to get the path of the file currently previewed in PROMPT_ASSEMBLER. Then read that file from disk.
 
 **Known constraints:**
 - StdoutCmdOutput must be disabled in apps launched from Qt Creator (stdout→stdin echo loop)
@@ -95,6 +119,15 @@ The bridge is Claude's primary way to interact with a running application. Both 
 - Command-response correlation (match sent command to its result)
 - Selective broadcast filtering (receive only results of own commands, not all)
 - Binary data channel (QByteArray pass-through for file content)
+
+## Architecture notes
+
+- OregPool: singleton registry, solveChanges() batches updates
+- OregObject → oo_delete() → pending list → pool deletes in solveChanges
+- OregObserver: two-step notification pattern (observer → container)
+- OregUpdateLock: RAII trigger for pool solve
+- mutableContainment_: flag on container for re-evaluating CHANGED objects
+- TestModelItem: Q_GADGET with value copies (not pointers)
 
 ## Commit Messages
 
@@ -109,3 +142,6 @@ Petr Talla: <contribution> (<N> lines) | Claude: <contribution> (<N> ins, <N> de
 
 - Last line documents authoring: who did what (design, direction, diagnosis, code, etc.)
 - Include line counts for transparency.
+
+---
+**Note for context compression:** The STDIO_BRIDGE section (connection patterns, commands, rules) and the Command system section must NOT be summarized away during compression — they contain exact procedures needed for bridge interaction.

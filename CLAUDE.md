@@ -128,6 +128,38 @@ When the user writes `pa_file`, connect via bridge and call `file_preview_path` 
 - `-client` flag sends command to already running Qt Creator instance
 - Linux: qtcreator not in PATH, use full path from Qt installation
 
+## Uniform project structure
+
+`cvz/` is the root. Structure:
+
+```
+cvz/                          ← root (../../ from any CLAUDE.md)
+├── base2/                    ← repo
+│   ├── cmd_sys/              ← module (static lib)
+│   ├── file_manager/         ← module (static lib)
+│   └── ...
+├── infrastructure/           ← repo
+│   ├── command_registry/     ← module (static lib)
+│   └── ...
+├── APPS/                     ← repo
+│   ├── PROMPT_ASSEMBLER/     ← exe module
+│   │   └── prompt_assembler/ ← subdirs .pro (builds all deps + exe)
+│   ├── CAD_EXE/              ← exe module
+│   │   └── cad_exe/          ← subdirs .pro
+│   └── STDIO_BRIDGE/         ← exe module
+│       └── stdio_bridge/     ← subdirs .pro
+└── BUILD/                    ← build output for base2 modules
+```
+
+- **Module** = directory with `.pro`, `.gitignore`, `.cpp`, `.h`. Builds as static lib.
+- **Exe module** = same, `TEMPLATE = app`. Contains subdirectory of same name with subdirs `.pro` that lists all dependency modules and the exe itself.
+- **Commands** = functions registered in `main()` via `CMD_SYS.add()`, not classes.
+- **Guards/Filters** = registered via `CMD_SYS.reg()`, extend execution pipeline.
+- **Bridge**: stdin → WS → CmdSys → execute → guards — same for all apps.
+- **Config**: `config.t2l` script executed at startup, same commands as runtime.
+
+When adding anything new — find the closest existing example and copy its pattern exactly.
+
 ## Architecture notes
 
 - OregPool: singleton registry, solveChanges() batches updates

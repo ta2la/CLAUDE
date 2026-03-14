@@ -1,5 +1,7 @@
 # SUPERCLAUDE — cvz/CLAUDE/CLAUDE.md
 
+## NO INNOVATIONS!!!!!!!!!! Follow existing patterns in other modules and repos. Copy naming, structure, and code style from what already exists. Do not invent new approaches when a working pattern is already in the codebase.
+
 Shared conventions for all cvz projects. Referenced as "SUPERCLAUDE" or "../../CLAUDE/CLAUDE.md" from module CLAUDE.md files.
 
 ## Command system (CLI)
@@ -119,6 +121,12 @@ When the user writes `pa_file`, connect via bridge and call `file_preview_path` 
 - Command-response correlation (match sent command to its result)
 - Selective broadcast filtering (receive only results of own commands, not all)
 - Binary data channel (QByteArray pass-through for file content)
+
+## Qt Creator integration
+
+- Open file at line in running Qt Creator: `qtcreator -client /path/to/file.cpp:120`
+- `-client` flag sends command to already running Qt Creator instance
+- Linux: qtcreator not in PATH, use full path from Qt installation
 
 ## Architecture notes
 

@@ -4,6 +4,15 @@
 
 Shared conventions for all cvz projects. Referenced as "SUPERCLAUDE" or "../../CLAUDE/CLAUDE.md" from module CLAUDE.md files.
 
+## Qt 6 qmake — $$PWD povinné
+
+Qt 6 (6.11+) řeší relativní cesty v .pro souborech od **build adresáře**, ne od zdrojového. Všechny cesty v LIBS, PRE_TARGETDEPS, DESTDIR, INCLUDEPATH musí používat `$$PWD/` prefix, jinak shadow build selže.
+
+- `DESTDIR = $$PWD/debug` (ne `debug`)
+- `LIBS += $$PWD/../../modul/debug/libmodul.a` (ne `../../modul/...`)
+- `INCLUDEPATH += $$PWD/` (ne `./`)
+- `SOURCES`/`HEADERS` — glob `$$PWD/*.cpp` funguje, ale `./*.cpp` ne
+
 ## Command system (CLI)
 
 - Commands available via stdin, output to stdout.

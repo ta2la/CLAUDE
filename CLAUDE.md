@@ -143,13 +143,16 @@ When the user writes `pa_file`, connect via bridge and call `file_preview_path` 
 
 ```
 cvz/                          ← root (../../ from any CLAUDE.md)
+├── base/                     ← repo (base, geogebra)
 ├── base2/                    ← repo
 │   ├── cmd_sys/              ← module (static lib)
 │   ├── file_manager/         ← module (static lib)
 │   └── ...
-├── infrastructure/           ← repo
-│   ├── command_registry/     ← module (static lib)
-│   └── ...
+├── infrastructure/           ← repo (applib, command_registry, command_registry_ex, html_view, object_registry)
+├── evo/                      ← repo (cad, cad_attrs, cad_draw, cad_infrastructure, storage, storage_base)
+├── hg/                       ← repo (hg_display, hg_interact, hg_papper, hg_style, hg_text, hg_utility)
+├── cad/                      ← repo (cad_settings)
+├── cad_professional/         ← repo (cad_professional_lib)
 ├── APPS/                     ← repo
 │   ├── PROMPT_ASSEMBLER/     ← exe module
 │   │   └── prompt_assembler/ ← subdirs .pro (builds all deps + exe)
@@ -157,8 +160,18 @@ cvz/                          ← root (../../ from any CLAUDE.md)
 │   │   └── cad_exe/          ← subdirs .pro
 │   └── STDIO_BRIDGE/         ← exe module
 │       └── stdio_bridge/     ← subdirs .pro
-└── BUILD/                    ← build output for base2 modules
+├── APPP/                     ← repo (CAD_3D_EXE)
+├── BUILD/                    ← build output for base2 modules
+├── PERSONAL/                 ← repo (tasks.md, kalendar.md)
+├── CLAUDE/                   ← repo (SUPERCLAUDE — this file)
+└── 2026_1_TIMEAXIS/          ← not in git; work logs by quarter (YYYY_Q_TIMEAXIS)
+    ├── 00/                   ← items prefixed 00_
+    ├── 01/                   ← items prefixed 01_
+    ├── 02/                   ← items prefixed 02_
+    └── 03/                   ← items prefixed 03_
 ```
+
+TIMEAXIS naming: `YYYY_Q_TIMEAXIS` where Q = quarter (1-4). Multiple repos per year (e.g. `2026_1_TIMEAXIS`, `2026_2_TIMEAXIS`, ...), older years too (e.g. `2025_1_TIMEAXIS`). Subdirs = months (00-12). Items inside prefixed with month number (`03_05_CRASH` = March 5th). Not in git.
 
 - **Module** = directory with `.pro`, `.gitignore`, `.cpp`, `.h`. Builds as static lib.
 - **Exe module** = same, `TEMPLATE = app`. Contains subdirectory of same name with subdirs `.pro` that lists all dependency modules and the exe itself.
